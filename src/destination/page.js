@@ -78,7 +78,7 @@ function DestinationPage() {
             <MainHeader />
             <div className="w-full sm:h-[645px] overflow-hidden relative bg-transparent z-0">
                 <img
-                    src={`/images/${destino.NOMBRE}.jpg`}
+                    src={destino.IMAGE_URL || destino.image_url || `/images/${destino.NOMBRE}.jpg`}
                     alt={destino.NOMBRE}
                     className="w-full h-full object-cover object-center absolute z-[-1]"
                 />
