@@ -177,7 +177,7 @@ function Main() {
               >
                 <div className="w-[382px] h-[250px] overflow-hidden">
                   <img
-                    src={destino.IMAGE_URL || `/images/${destino.NOMBRE}.jpg`}
+                    src={destino.IMAGE_URL || destino.image_url || `/images/${destino.NOMBRE}.jpg`}
                     alt={destino.NOMBRE}
                     className="w-full h-full object-cover object-center"
                   />

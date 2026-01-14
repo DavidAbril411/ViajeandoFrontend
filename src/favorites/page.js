@@ -110,7 +110,7 @@ function Favorites() {
                             >
                                 <div className="w-[300px] h-[200px] overflow-hidden">
                                     <img
-                                        src={destino.IMAGE_URL || `/images/${destino.NOMBRE}.jpg`}
+                                        src={destino.IMAGE_URL || destino.image_url || `/images/${destino.NOMBRE}.jpg`}
                                         alt={destino.NOMBRE}
                                         className="w-full h-full object-cover object-center"
                                     />
