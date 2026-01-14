@@ -113,7 +113,7 @@ function Favorites() {
                                         src={destino.IMAGE_URL || destino.image_url || `/images/${destino.NOMBRE}.jpg`}
                                         alt={destino.NOMBRE}
                                         className="w-full h-full object-cover object-center"
-                                    />
+                                    /> {/* Agrega el atributo alt */}
                                 </div>
                                 <span className="block border-solid border-2 rounded-b-lg h-[45px]">
                                     {destino.NOMBRE}
