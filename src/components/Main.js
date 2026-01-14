@@ -33,7 +33,7 @@ function Main() {
   useEffect(() => {
     async function fetchDestinos() {
       try {
-        const response = await fetch('http://localhost:8000/api/destinos');
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/destinos`);
         const data = await response.json();
         const shuffledData = data.sort(() => Math.random() - 0.5);
 
@@ -52,7 +52,7 @@ function Main() {
       if (!id) return;
 
       try {
-        const response = await fetch(`http://localhost:8000/api/favoritos/${id}`);
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/favoritos/${id}`);
         const backendFavorites = await response.json();
         console.log("Datos del backend:", backendFavorites);
 
@@ -78,7 +78,7 @@ function Main() {
 
     try {
       // Sincronizar solo el favorito que cambió
-      await fetch('http://localhost:8000/api/favoritos/sync', {
+      await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/favoritos/sync`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

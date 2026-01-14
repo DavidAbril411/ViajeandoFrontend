@@ -39,7 +39,7 @@ function MainHeader() {
         const email = getEmailFromToken();
         if (email && favorites.length > 0) {
             try {
-                await fetch('http://localhost:8000/api/favoritos/sync', {
+                await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/favoritos/sync`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, favoritos: favorites }),

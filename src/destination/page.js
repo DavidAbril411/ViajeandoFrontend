@@ -21,7 +21,7 @@ function DestinationPage() {
     useEffect(() => {
         async function fetchDestinoData() {
             try {
-                const response = await fetch(`http://localhost:8000/api/destinos/${id}`);
+                const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/destinos/${id}`);
                 const data = await response.json();
                 setDestino(data);
             } catch (error) {
@@ -37,7 +37,7 @@ function DestinationPage() {
     useEffect(() => {
         async function fetchOrigins() {
             try {
-                const response = await fetch('http://localhost:8000/api/origen');
+                const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/origen`);
                 const data = await response.json();
                 setOrigins(data);
             } catch (error) {

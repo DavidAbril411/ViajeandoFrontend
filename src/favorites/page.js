@@ -31,7 +31,7 @@ function Favorites() {
     useEffect(() => {
         async function fetchDestinos() {
             try {
-                const response = await fetch('http://localhost:8000/api/destinos');
+                const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/destinos`);
                 const data = await response.json();
                 setDestinos(data);
             } catch (error) {
@@ -47,7 +47,7 @@ function Favorites() {
             if (!id) return;
 
             try {
-                const response = await fetch(`http://localhost:8000/api/favoritos/${id}`);
+                const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/favoritos/${id}`);
                 const backendFavorites = await response.json();
                 console.log("Datos del backend:", backendFavorites);
 
