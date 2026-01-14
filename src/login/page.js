@@ -136,6 +136,7 @@ function Login() {
                 >
                     Sign In
                 </Button>
+                {/* */}
 
                 {/* Links de ayuda */}
                 <Typography variant="body2" className="text-gray-500 mt-4">
