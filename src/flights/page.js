@@ -14,7 +14,7 @@ const Flights = () => {
     };
 
     const queryParams = parseQueryString(window.location.search);
-    const { origin, destination, passengers, startDate } = queryParams;
+    const { origin, passengers, startDate } = queryParams;
 
     // We need a destination. If not in URL, we might need to handle that, 
     // but the user flow implies clicking a destination card first.
