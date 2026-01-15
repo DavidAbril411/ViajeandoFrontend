@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import MainHeader from '../components/Header';
 import Footer from '../components/Footer';
+import PriceTrendChart from '../components/PriceTrendChart';
+import { motion } from 'framer-motion';
 
 const Flights = () => {
     const [flights, setFlights] = useState([]);
@@ -96,7 +98,11 @@ const Flights = () => {
                 {error && <p className="text-red-500">{error}</p>}
                 {warning && <div className="bg-yellow-100 p-4 rounded mb-4 text-yellow-800 border-l-4 border-yellow-500">{warning}</div>}
 
+
                 <div className="w-full max-w-4xl space-y-4">
+                    {/* Price Trend Chart - Only show if we have flights or loading finished */}
+                    {!loading && flights.length > 0 && <PriceTrendChart currentPrice={flights[0].price?.grandTotal || flights[0].travelerPricings?.[0]?.price?.total} />}
+
                     {!loading && flights.length === 0 && !error && <p>No se encontraron vuelos.</p>}
 
                     {flights.map((flight, index) => {
@@ -107,7 +113,13 @@ const Flights = () => {
                         const currency = flight.price?.currency || 'USD';
 
                         return (
-                            <div key={index} className="bg-white shadow rounded-lg p-6 flex flex-col md:flex-row justify-between items-center transition hover:shadow-lg">
+                            <motion.div
+                                key={index}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: index * 0.1 }}
+                                className="bg-white shadow rounded-lg p-6 flex flex-col md:flex-row justify-between items-center transition hover:shadow-lg hover:scale-[1.01] cursor-pointer"
+                            >
                                 <div className="mb-4 md:mb-0">
                                     <div className="text-lg font-bold text-[#2E9BC6]">ID: {flight.id}</div>
                                     {/* In real Amadeus data, carrierCode needs to be mapped to Name dictionary provided in response. 
@@ -126,7 +138,7 @@ const Flights = () => {
                                         Seleccionar
                                     </button>
                                 </div>
-                            </div>
+                            </motion.div>
                         );
                     })}
                 </div>

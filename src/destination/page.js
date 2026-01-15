@@ -4,6 +4,7 @@ import MainHeader from '../components/Header';
 import { Button, TextField, MenuItem } from '@mui/material';
 import Footer from '../components/Footer';
 import DatesPicker from '../components/datesPicker/DatesPicker';
+import WeatherWidget from '../components/WeatherWidget';
 
 function DestinationPage() {
     const [origin, setOrigin] = React.useState('');
@@ -119,6 +120,9 @@ function DestinationPage() {
                         </div>
                         <Button onClick={handleDestinationClick} sx={{ color: '#2E9BC6', textTransform: 'none' }}>Continuar</Button>
                     </div>
+
+                    {/* Weather Widget (Top Right) */}
+                    <WeatherWidget cityName={destino.NOMBRE} />
                 </div>
             </div>
             <Footer />
