@@ -43,7 +43,7 @@ const WeatherWidget = ({ cityName }) => {
     const getWeatherIcon = (code) => {
         // https://open-meteo.com/en/docs
         if (code === 0) return "☀️"; // Clear sky
-        if (code >= 1 && code <= 3) return "aaS"; // Partly cloudy
+        if (code >= 1 && code <= 3) return "🌤️"; // Partly cloudy
         if (code >= 45 && code <= 48) return "🌫️"; // Fog
         if (code >= 51 && code <= 67) return "🌧️"; // Drizzle/Rain
         if (code >= 71 && code <= 77) return "❄️"; // Snow

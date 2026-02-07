@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { jwtDecode } from 'jwt-decode';
 import { Grid2, Container } from '@mui/material';
-import { useLocation } from 'wouter';
+import { useLocation, Link } from 'wouter';
 import Footer from '../components/Footer';
 import MainHeader from '../components/Header';
 
@@ -26,6 +26,7 @@ function getIdFromToken() {
 function Favorites() {
     const [destinos, setDestinos] = useState([]);
     const [favoriteStates, setFavoriteStates] = useState({});
+    const [loading, setLoading] = useState(true);
     const [, setLocation] = useLocation();
 
     useEffect(() => {
@@ -44,22 +45,25 @@ function Favorites() {
     useEffect(() => {
         const fetchFavorites = async () => {
             const id = getIdFromToken();
-            if (!id) return;
+            if (!id) {
+                setLoading(false);
+                return;
+            }
 
             try {
                 const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/favoritos/${id}`);
                 const backendFavorites = await response.json();
-                console.log("Datos del backend:", backendFavorites);
 
                 const initialFavoriteStates = backendFavorites.reduce((acc, { ID }) => {
                     acc[ID] = true;
                     return acc;
                 }, {});
-                console.log("Estados iniciales de favoritos:", initialFavoriteStates);
 
                 setFavoriteStates(initialFavoriteStates);
             } catch (error) {
                 console.error('Error al obtener favoritos:', error);
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -102,7 +106,30 @@ function Favorites() {
                     </svg>
                 </div>
                 <Grid2 container justifyContent="center" gap="48px" paddingBottom={7}>
-                    {filteredDestinos.map((destino) => (
+                    {loading ? (
+                        <div className="flex flex-col items-center py-16 w-full">
+                            <svg className="animate-spin h-8 w-8 text-[#3BC4FA]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                            </svg>
+                            <p className="text-gray-400 mt-3">Cargando favoritos...</p>
+                        </div>
+                    ) : filteredDestinos.length === 0 ? (
+                        <div className="flex flex-col items-center py-12 w-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-24 h-24 text-gray-200 mb-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
+                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                            <p className="text-xl font-semibold text-gray-500 mb-2">Aún no tenés destinos favoritos</p>
+                            <p className="text-gray-400 text-sm mb-6 text-center max-w-xs">
+                                Explorá destinos y tocá el <span className="text-red-400">♥</span> para guardarlos acá
+                            </p>
+                            <Link href="/"
+                                className="bg-[#2E9BC6] hover:bg-[#2589b0] text-white px-6 py-2.5 rounded-full transition-colors text-sm font-medium no-underline">
+                                Explorar destinos
+                            </Link>
+                        </div>
+                    ) : (
+                        filteredDestinos.map((destino) => (
                         <Grid2 key={destino.ID}>
                             <button
                                 className="w-[300px] rounded-t-lg rounded-b-lg overflow-hidden bg-white relative"
@@ -120,7 +147,8 @@ function Favorites() {
                                 </span>
                             </button>
                         </Grid2>
-                    ))}
+                    ))
+                    )}
                 </Grid2>
             </Container>
             <Footer></Footer>

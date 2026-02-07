@@ -2,15 +2,17 @@ import React, { useState, useEffect } from 'react';
 import MainHeader from '../components/Header';
 import Footer from '../components/Footer';
 import PriceTrendChart from '../components/PriceTrendChart';
-import { motion } from 'framer-motion';
+import FlightCard from '../components/FlightCard';
+import FlightDetailModal from '../components/FlightDetailModal';
 
 const Flights = () => {
     const [flights, setFlights] = useState([]);
+    const [carriers, setCarriers] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [warning, setWarning] = useState(null);
+    const [selectedFlight, setSelectedFlight] = useState(null);
 
-    // Función para parsear los parámetros del query string
     const parseQueryString = (query) => {
         return Object.fromEntries(new URLSearchParams(query));
     };
@@ -73,9 +75,12 @@ const Flights = () => {
 
                 if (data.warning) setWarning(data.warning);
 
-                // Amadeus returns data in 'data' array. Mock returns { data: [...] }
-                const flightResults = Array.isArray(data) ? data : (data.data || []);
+                // Backend ahora retorna { data: [...], dictionaries: { carriers: {...} } }
+                const flightResults = data.data || (Array.isArray(data) ? data : []);
                 setFlights(flightResults);
+                if (data.dictionaries?.carriers) {
+                    setCarriers(data.dictionaries.carriers);
+                }
 
             } catch (err) {
                 console.error(err);
@@ -92,58 +97,61 @@ const Flights = () => {
         <div className="min-h-screen flex flex-col bg-[#F5F5F5]">
             <MainHeader />
             <main className="flex-grow flex flex-col items-center py-10 px-4">
-                <h1 className="text-3xl font-semiBold text-[#FA713B] mb-6">Resultados de Vuelos</h1>
+                <h1 className="text-3xl font-semibold text-[#FA713B] mb-6">Resultados de Vuelos</h1>
 
-                {loading && <p>Buscando las mejores ofertas...</p>}
-                {error && <p className="text-red-500">{error}</p>}
-                {warning && <div className="bg-yellow-100 p-4 rounded mb-4 text-yellow-800 border-l-4 border-yellow-500">{warning}</div>}
-
+                {loading && (
+                    <div className="flex flex-col items-center gap-3 py-16">
+                        <svg className="animate-spin h-8 w-8 text-[#2E9BC6]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                        </svg>
+                        <p className="text-gray-500">Buscando las mejores ofertas...</p>
+                    </div>
+                )}
+                {error && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-600 max-w-md text-center">
+                        <p className="font-medium">Error al buscar vuelos</p>
+                        <p className="text-sm mt-1">{error}</p>
+                    </div>
+                )}
+                {warning && <div className="bg-yellow-100 p-4 rounded-lg mb-4 text-yellow-800 border-l-4 border-yellow-500 max-w-4xl w-full">{warning}</div>}
 
                 <div className="w-full max-w-4xl space-y-4">
-                    {/* Price Trend Chart - Only show if we have flights or loading finished */}
                     {!loading && flights.length > 0 && <PriceTrendChart currentPrice={flights[0].price?.grandTotal || flights[0].travelerPricings?.[0]?.price?.total} />}
 
-                    {!loading && flights.length === 0 && !error && <p>No se encontraron vuelos.</p>}
+                    {/* Empty state */}
+                    {!loading && flights.length === 0 && !error && (
+                        <div className="flex flex-col items-center py-16 text-gray-400">
+                            <svg className="w-20 h-20 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" />
+                            </svg>
+                            <p className="text-lg font-medium text-gray-500">No se encontraron vuelos</p>
+                            <p className="text-sm mt-1">Intentá con otras fechas o destinos</p>
+                        </div>
+                    )}
 
-                    {flights.map((flight, index) => {
-                        // Extracting basic info (simplified for display)
-                        const itinerary = flight.itineraries[0];
-                        const segment = itinerary.segments[0];
-                        const price = flight.price?.grandTotal || flight.travelerPricings?.[0]?.price?.total || 'N/A';
-                        const currency = flight.price?.currency || 'USD';
-
-                        return (
-                            <motion.div
-                                key={index}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: index * 0.1 }}
-                                className="bg-white shadow rounded-lg p-6 flex flex-col md:flex-row justify-between items-center transition hover:shadow-lg hover:scale-[1.01] cursor-pointer"
-                            >
-                                <div className="mb-4 md:mb-0">
-                                    <div className="text-lg font-bold text-[#2E9BC6]">ID: {flight.id}</div>
-                                    {/* In real Amadeus data, carrierCode needs to be mapped to Name dictionary provided in response. 
-                                        For simplification we show the code or mock name. */}
-                                    <div className="text-gray-600">Aerolínea: {segment.carrierCode} {segment.number}</div>
-                                    <div className="text-sm text-gray-500">
-                                        {segment.departure.iataCode} ({new Date(segment.departure.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})
-                                        &rarr;
-                                        {segment.arrival.iataCode} ({new Date(segment.arrival.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})
-                                    </div>
-                                    <div className="text-xs text-gray-400 mt-1">Duración: {itinerary.duration.replace('PT', '').toLowerCase()}</div>
-                                </div>
-                                <div className="text-center md:text-right">
-                                    <div className="text-2xl font-bold text-[#FA713B]">{currency} {price}</div>
-                                    <button className="mt-2 bg-[#2E9BC6] text-white px-6 py-2 rounded-full hover:bg-[#2589b0] transition">
-                                        Seleccionar
-                                    </button>
-                                </div>
-                            </motion.div>
-                        );
-                    })}
+                    {/* Flight cards */}
+                    {flights.map((flight, index) => (
+                        <FlightCard
+                            key={flight.id || index}
+                            flight={flight}
+                            carriers={carriers}
+                            index={index}
+                            onSelect={setSelectedFlight}
+                        />
+                    ))}
                 </div>
             </main>
             <Footer />
+
+            {/* Flight detail modal */}
+            {selectedFlight && (
+                <FlightDetailModal
+                    flight={selectedFlight}
+                    carriers={carriers}
+                    onClose={() => setSelectedFlight(null)}
+                />
+            )}
         </div>
     );
 };
