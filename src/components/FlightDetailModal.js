@@ -2,6 +2,41 @@ import React from 'react';
 import { getAirlineName } from '../utils/airlines';
 import { getCityName } from '../utils/airports';
 
+// Mapa de aerolíneas → sitio web oficial
+const AIRLINE_WEBSITES = {
+  AR: 'https://www.aerolineas.com.ar',
+  LA: 'https://www.latamairlines.com',
+  AA: 'https://www.aa.com',
+  UA: 'https://www.united.com',
+  DL: 'https://www.delta.com',
+  AC: 'https://www.aircanada.com',
+  BA: 'https://www.britishairways.com',
+  AF: 'https://www.airfrance.com',
+  LH: 'https://www.lufthansa.com',
+  IB: 'https://www.iberia.com',
+  AZ: 'https://www.ita-airways.com',
+  EK: 'https://www.emirates.com',
+  QR: 'https://www.qatarairways.com',
+  TK: 'https://www.turkishairlines.com',
+  JL: 'https://www.jal.co.jp',
+  NH: 'https://www.ana.co.jp',
+  KL: 'https://www.klm.com',
+  VY: 'https://www.vueling.com',
+  SQ: 'https://www.singaporeair.com',
+  QF: 'https://www.qantas.com',
+  AV: 'https://www.avianca.com',
+  CM: 'https://www.copaair.com',
+  AM: 'https://www.aeromexico.com',
+  CX: 'https://www.cathaypacific.com',
+  EY: 'https://www.etihad.com',
+  TP: 'https://www.flytap.com',
+  SK: 'https://www.flysas.com',
+  LX: 'https://www.swiss.com',
+  OS: 'https://www.austrian.com',
+  AY: 'https://www.finnair.com',
+  KE: 'https://www.koreanair.com',
+};
+
 function parseDuration(isoDuration) {
   if (!isoDuration) return '—';
   const match = isoDuration.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
@@ -23,17 +58,25 @@ function formatDateTime(isoString) {
   }
 }
 
-function buildGoogleFlightsUrl(flight) {
+function buildSkyscannerUrl(flight) {
   const seg = flight.itineraries?.[0]?.segments?.[0];
   const lastSeg = flight.itineraries?.[0]?.segments?.slice(-1)[0];
-  if (!seg) return 'https://www.google.com/travel/flights';
+  if (!seg) return 'https://www.skyscanner.com.ar';
 
   const origin = seg.departure?.iataCode || '';
   const dest = lastSeg?.arrival?.iataCode || '';
-  const date = seg.departure?.at?.split('T')[0] || '';
-  const currency = flight.price?.currency || 'USD';
+  const rawDate = seg.departure?.at?.split('T')[0] || '';
+  // Skyscanner usa formato YYMMDD en la URL
+  const dateParts = rawDate.split('-');
+  const skyDate = dateParts.length === 3
+    ? dateParts[0].slice(2) + dateParts[1] + dateParts[2]
+    : '';
 
-  return `https://www.google.com/travel/flights?q=flights+from+${origin}+to+${dest}+on+${date}&curr=${currency}`;
+  return `https://www.skyscanner.com.ar/transport/flights/${origin.toLowerCase()}/${dest.toLowerCase()}/${skyDate}/`;
+}
+
+function getAirlineWebsite(carrierCode) {
+  return AIRLINE_WEBSITES[carrierCode] || null;
 }
 
 const FlightDetailModal = ({ flight, carriers, onClose }) => {
@@ -60,7 +103,9 @@ const FlightDetailModal = ({ flight, carriers, onClose }) => {
     ? bags.weight ? `${bags.weight} ${bags.weightUnit || 'KG'} incluidos` : bags.quantity ? `${bags.quantity} valija${bags.quantity > 1 ? 's' : ''} incluida${bags.quantity > 1 ? 's' : ''}` : null
     : null;
 
-  const googleUrl = buildGoogleFlightsUrl(flight);
+  const skyscannerUrl = buildSkyscannerUrl(flight);
+  const airlineUrl = getAirlineWebsite(segments[0]?.carrierCode);
+  const airlineName = getAirlineName(segments[0]?.carrierCode, carriers);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
@@ -200,27 +245,44 @@ const FlightDetailModal = ({ flight, carriers, onClose }) => {
           )}
         </div>
 
-        {/* Footer: Price + CTA */}
+        {/* Footer: Price + CTAs */}
         <div className="px-5 pb-5">
-          <div className="bg-gray-50 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div>
-              <div className="text-sm text-gray-500">Precio total</div>
-              <div className="text-3xl font-bold text-[#FA713B]">
-                {currency} {parseFloat(price).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+          <div className="bg-gray-50 rounded-xl p-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div>
+                <div className="text-sm text-gray-500">Precio total</div>
+                <div className="text-3xl font-bold text-[#FA713B]">
+                  {currency} {parseFloat(price).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                </div>
+                <div className="text-xs text-gray-400">por persona · impuestos incluidos</div>
               </div>
-              <div className="text-xs text-gray-400">por persona · impuestos incluidos</div>
+              <div className="flex flex-col gap-2 w-full sm:w-auto">
+                <a
+                  href={skyscannerUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-[#2E9BC6] hover:bg-[#2589b0] text-white px-6 py-3 rounded-full transition-colors text-sm font-semibold flex items-center justify-center gap-2 whitespace-nowrap"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  Buscar en Skyscanner
+                </a>
+                {airlineUrl && (
+                  <a
+                    href={airlineUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="border border-[#2E9BC6] text-[#2E9BC6] hover:bg-[#2E9BC6]/5 px-6 py-2.5 rounded-full transition-colors text-sm font-medium flex items-center justify-center gap-2 whitespace-nowrap"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    Ir a {airlineName}
+                  </a>
+                )}
+              </div>
             </div>
-            <a
-              href={googleUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-[#2E9BC6] hover:bg-[#2589b0] text-white px-6 py-3 rounded-full transition-colors text-sm font-semibold flex items-center gap-2 whitespace-nowrap"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-              Buscar en Google Flights
-            </a>
           </div>
         </div>
       </div>
